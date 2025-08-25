@@ -1,4 +1,4 @@
-Populist Axis - Characterizing Dimensions
+Populist Axis - Dimensions and Vote
 ================
 AZ
 2025-08-25
@@ -117,7 +117,7 @@ bulk |>
   theme(legend.position='bottom') 
 ```
 
-![](6_vote_model_interpretation_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](6_vote_model_interpretation_files/figure-gfm/weights-1.png)<!-- -->
 
 Plot the complementarities
 
@@ -150,7 +150,7 @@ bulk |>
   theme(legend.position='bottom')
 ```
 
-![](6_vote_model_interpretation_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](6_vote_model_interpretation_files/figure-gfm/compl-1.png)<!-- -->
 
 ### Construct and plot indifference curves for the German case
 
@@ -291,4 +291,4 @@ pics[[1L]][['rpop']] + pics[[2L]][['rpop']] +  pics[[3L]][['rpop']] +
   plot_layout(design = design, guides="collect") & theme(legend.position = 'none')
 ```
 
-![](6_vote_model_interpretation_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](6_vote_model_interpretation_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->

@@ -1,5 +1,5 @@
 ---
-title: "Populist Axis - Characterizing Dimensions"
+title: "Populist Axis - Dimensions and Vote"
 author: "AZ"
 date: "`r Sys.Date()`"
 output:
@@ -112,7 +112,7 @@ bulk  <- lapply(touse, function(m) {
 ```
 
 Plot the weights of the cultural and populist dimensions (relative to the weight of the economic dimension, which is set to 1)
-```{r} 
+```{r weights, fig.width=7, fig.height=6} 
 bulk |>
   filter(model %in% c('A4','C4') & vb=="raw") |>
   filter(quantity %in% c('w_cult','w_pop')) |> 
@@ -134,7 +134,7 @@ bulk |>
 ```
 
 Plot the complementarities
-```{r}
+```{r compl, fig.height=9, fig.width=6.5} 
 qlabs <- c('cor_econ_cult'='Economic & Cultural','cor_econ_pop'='Economic & Populist',
            'cor_cult_pop'='Cultural & Populist')
 bulk |>
