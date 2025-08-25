@@ -9,11 +9,10 @@ AZ
 
 ``` r
 in_dir <- "./data"
-out_dir <- "./output"
 
 names(countries) <- countries <- c("CZ","DE","ES","FR","HU","IT","NL","SE","GB")
 udims <- c('econ','cult','populism')
-countries.lab <- countrycode::countrycode(countries, 'iso2c', 'country.name')
+countries.lab <- countrycode(countries, 'iso2c', 'country.name')
 names(countries.lab) <- countries
 countries.lab['GB'] <- 'England'
 countries.lab <- sort(countries.lab)
@@ -22,7 +21,7 @@ countries.lab <- sort(countries.lab)
 ### Load the data
 
 ``` r
-loaded <- load(file= file.path(in_dir, "data_for_vcp_EVES2.RData"))
+loaded <- load(file= file.path(in_dir, "data_for_vcp.RData"))
 ```
 
 ### Check against published party-level populism scales

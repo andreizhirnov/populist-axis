@@ -11,25 +11,27 @@ set.seed(123)
 
 rm(list=ls())
 
+## subdirectories
 in_dir <- "./data"
+aux_dir <- "./misc_inputs"
 out_dir <- "./output"
 
-loaded <-  load(file= file.path(in_dir, "data_for_vcp_EVES2.RData"))
+## load data
+loaded <-  load(file= file.path(in_dir, "data_for_vcp.RData"))
 
+## set constants
 countries <- c("CZ","DE","ES","FR","HU","IT","NL","SE","GB")
 names(countries) <- countries
 
 udims <- c('econ','cult','populism')
-
-
-
 dims.lab <- c(econ="Economic", cult="Cultural",
               ant="Anti-elitism", ppl="People-centrism", man="Manichean", populism="Populism")
 countries.lab <- countrycode::countrycode(countries, 'iso2c', 'country.name')
 names(countries.lab) <- countries
 countries.lab['GB'] <- 'England'
 countries.lab <- sort(countries.lab)
-### figure 2
+
+## Compare against the existing measures of populism at the party level
 temp <- pdata |>
   mutate(
     populist = case_when(
@@ -45,7 +47,7 @@ pic <- temp |>
   labs(x="Populism (POPPA)", y='Populism (our estimates)', shape="Classified by\nPopuList as") 
 ggsave(filename = file.path(out_dir, "figure2.pdf"), plot = pic, width=7, height=4)
  
-cat("correlation between POPPA measure and current measure: ", 
+cat("correlation between POPPA measure and the generated measure: ", 
     with(temp, cor(poppa_populism, populism, use='complete.obs')),"\n")
 
 cat("excluding Hungary: ", 
@@ -55,7 +57,7 @@ cat("by country:\n")
 vs <- sapply(split(temp,temp$cntry), with,  cor(poppa_populism, populism, use='complete.obs'))
 for (cn in names(vs)) cat(cn, ": ", vs[cn], "\n")
 
-## correlations
+## correlations across dimensions
 cors <- lapply(countries, function(cn) {
   d <- vdata[[cn]]
   cov.wt(d[,udims], wt = d$wt, cor = TRUE, center = TRUE,
@@ -96,7 +98,7 @@ pic <- rbind(long_cors, long_pcors) |>
   theme(legend.position='bottom')
 ggsave(file.path(out_dir, "figure5.pdf"), pic, width=7, height=4)
  
-## landscapes
+## landscapes by country and combined
 kde2d.weighted <- function(dat, w, n) {
   nx <- nrow(dat)
   gs <- lapply(dat, function(v) seq(min(v, na.rm=TRUE), max(v, na.rm=TRUE), length = n))

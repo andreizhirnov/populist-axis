@@ -1,20 +1,26 @@
-library("lavaan")
-library("survey")
-library("mice")
+library(lavaan)
+library(survey)
+library(mice)
 library(dplyr)
 library(tidyr)
 
 set.seed(123)
 
 rm(list=ls())
+
+## define the subdirectories
 in_dir <- "./data"
+aux_dir <- "./misc_inputs"
 out_dir <- "./output"
-n_imp <- 20L  ##  change this to 20 in the final run
+
+## set constants
+n_imp <- 20L  ## number of imputations
 
 countries <- c("CZ","DE","ES","FR","HU","IT","NL","RO","SE","GB")
 names(countries) <- countries
 
 ### aux functions
+### raking
 az_rake <- function(x, id, by, on, wf.ds, pop.mg) {
   dli <- split(x, x[[by]])
   over <- names(dli)
@@ -45,32 +51,29 @@ az_rake <- function(x, id, by, on, wf.ds, pop.mg) {
 }
 
 ## load data
-dt0 <- readRDS(file.path(in_dir, "EVES2_ww_nolabs.rds"))
+dt0 <- readRDS(file.path(in_dir, "PRECEDE3_ww_nolabs.rds"))
 vc0 <- readRDS(file.path(in_dir, "PRECEDE3_vc.rds"))
-bmks <- readRDS(file.path(in_dir, "Census benchmarks.rds"))
-pol.mod <- openxlsx::read.xlsx(file.path(in_dir, "variables with policies.xlsx"), sheet="model3") |> na.omit()
+bmks <- readRDS(file.path(aux_dir, "Census benchmarks.rds"))
+pol.mod <- openxlsx::read.xlsx(file.path(aux_dir, "manifest_variables.xlsx")) |> na.omit()
 pol.trans <- with(pol.mod, setNames(vnam, vnam_peps))
 peps <- readRDS(file.path(in_dir, 'PEPS.rds')) |> filter(cntry %in% countries)
 pg.cab0 <- openxlsx::read.xlsx(file.path(in_dir, "parlgov.xlsx"), sheet="cabinet")
 pg.ele0 <- openxlsx::read.xlsx(file.path(in_dir, "parlgov.xlsx"), sheet="election")
-popul0 <- openxlsx::read.xlsx(file.path(in_dir, "parties_information.xlsx"))
-poppa0 <- foreign::read.dta(file.path(in_dir, "party_means_forR.dta"))
-wf.recall <- openxlsx::read.xlsx(file.path(in_dir, "vote distribution.xlsx"), sheet="margins")
+popul0 <- openxlsx::read.xlsx(file.path(aux_dir, "parties_information.xlsx"))
+poppa0 <- foreign::read.dta(file.path(in_dir, "POPPA_party_means_forR.dta"))
+wf.recall <- openxlsx::read.xlsx(file.path(aux_dir, "vote_distribution.xlsx"), sheet="margins")
 
-## cleaning
+## exclude regions with strong regional parties
 dt <- subset(dt0, 
              cntry %in% countries & 
                !wf.region %in% c('UKL','UKM','UKN','ES11','ES13','ES21','ES22','ES24','ES51','ES52','ES64','ES70'))
 
+## add vote distributions to the raking benchmarks
 for (cn in countries) {
   bmks[[cn]][['wf.recall']] <- subset(wf.recall, cntry==cn, select=c('wf.recall','value'))
 } 
 
-#### policy positions
-dims <- unique(pol.mod$dim)
-qq <- tapply(pol.mod$vnam, INDEX=pol.mod$dim, FUN=paste, collapse=' + ')
-mod <- paste(paste0(names(qq), " =~ ", qq , ";"), collapse = ' ') 
-              
+## manifest variables for the measurement models
 target <- with(pol.mod, setNames(vnam, vabbr))
 reverse <- subset(pol.mod, reverse=='Y', select="vabbr", drop=TRUE)
 
@@ -107,7 +110,7 @@ pol_nmi <- ifelse(complete.cases(vbulk[,names(target)]),1,0)
 sam <- subset(vbulk, ivc_nmi+pol_nmi>0) |> 
   mutate(cntry_party_ivc = coalesce(cntry_party_ivc, 'UNK'))
  
-## compute weights, pre-sample, and impute
+## compute weights
 wei.vars <- c("wf.gender","wf.age","wf.edu","wf.region",'wf.recall' )
 wei.factors <- subset(dt, select=c('row','cntry',grep("^wf.", colnames(dt), val=TRUE)))
 wei.factors <- merge(wei.factors, vc0[c('row','wf.recall')], all.x=TRUE )
@@ -115,6 +118,7 @@ wei.factors$wf.recall[which(is.na(wei.factors$wf.recall))] <- 'UNK'
 sam <- az_rake(sam, id='row', by='cntry', on=wei.vars, wf.ds=wei.factors, pop.mg=bmks) 
 sams <- split(sam, sam$cntry)
 
+## save data that should not be imputed
 vtemp <- lapply(sams, function(u) {
   for (v in names(target)) {
     u[[v]] <- NULL
@@ -122,6 +126,7 @@ vtemp <- lapply(sams, function(u) {
   u
 })
 
+## multiple imputations
 vbulk.i <- lapply(sams, function(u) { 
   w <- u
   w$cntry <- w$row <- w$wt <-NULL 
@@ -131,9 +136,7 @@ vbulk.i <- lapply(sams, function(u) {
   mice::mice(w, m=n_imp, seed=123, method='rf')
 }) 
  
-### add party-level data to the party data 
-
-## add parties
+### add party-level information to the party expert survey
 ptran <- c(
   'IT:Azione'='IT:Azione+Italia Viva',
   'IT:Italia Viva'='IT:Azione+Italia Viva',
@@ -170,6 +173,7 @@ pdata <- peps |> mutate(
 
 pbulk <- subset(pdata, cntry_party %in% vbulk$cntry_party_ivc)
 
+## information from ParlGov
 eldate <- as.Date("2023-2-1")
 ptran <- c('CZ:Pi'='CZ:Pirati',  
            'CZ:SZ'='CZ:Zeleni',
@@ -257,19 +261,6 @@ pg.cab <- pg.cab0 |>
   select(cntry, cabinet_name, start, cabinet_party, cntry_party, ends_with("cabinet_id")) |> 
   distinct()
 
-# keeper <- aggregate(start ~ cntry, data=subset(pg.cab, ), FUN=max) 
-# sta.inc <- unique(subset(merge(pg.cab, keeper), select=c('cntry_party','cabinet_party')))
-# sta.inc <- setNames(sta.inc$cabinet_party, sta.inc$cntry_party)
-# 
-# keeper <-  unique(as.numeric(as.character(
-#   subset(pg.cab, start <= eldate & start >= yrm20 & !is.na(previous_cabinet_id), select="previous_cabinet_id", drop=TRUE  )
-# )))
-# pg.cab <- subset(pg.cab, (cabinet_id %in% keeper | start >= yrm20) & start <= eldate)
-# 
-# qq <- setdiff(unique(subset(pg.cab, cntry=='RO', select='cntry_party', drop=TRUE)), subset(pbulk, select='cntry_party', drop=TRUE))
-# unique(subset(pg.cab, cntry_party %in% qq , select=c("cntry_party", "party_name_english")))
-
-
 temp0 <- pg.cab |> select(cntry, start, cabinet_id, previous_cabinet_id) |>  distinct()
 incab <- temp0 |> 
   left_join(temp0, by = join_by(cntry==cntry, cabinet_id ==previous_cabinet_id)) |>
@@ -331,9 +322,9 @@ poppa1 <- poppa0 |> mutate(
     ) |> group_by(cntry_party) |>
   summarize(poppa_populism = sum(populism*vote_share, na.rm=TRUE)/sum(vote_share, na.rm=TRUE)) 
 
-# xx = pbulk[c('cntry','cntry_party')] |> distinct()
-# setdiff(xx$cntry_party, poppa1$cntry_party)
-# setdiff(poppa1$cntry_party,xx$cntry_party)
+# check = pbulk[c('cntry','cntry_party')] |> distinct()
+# setdiff(check$cntry_party, poppa1$cntry_party)
+# setdiff(poppa1$cntry_party,check$cntry_party)
 
 ptemp <- pbulk[c('cntry','cntry_party')] |> distinct() |>
   left_join(poppa1, by='cntry_party') |>
@@ -348,4 +339,4 @@ ptemp <- pbulk[c('cntry','cntry_party')] |> distinct() |>
                   levels=c("PR","PL","PC","OTH"), 
                   labels=c("Populist Right", "Populist Left","Other Populist","Other"))) 
 
-save(list=c("vbulk.i","vtemp","pbulk","ptemp"), file= file.path(in_dir, "prepared_for_vcp_EVES2.RData"))
+save(list=c("vbulk.i","vtemp","pbulk","ptemp"), file= file.path(in_dir, "prepared_for_vcp.RData"))

@@ -1,7 +1,6 @@
-
-library(Rcpp)
 library(dplyr)
-library(tidyr) 
+library(tidyr)
+library(Rcpp)
 library(abind)
 
 set.seed(123)
@@ -15,8 +14,7 @@ in_dir <- "./data"
 outdir <- "./output"
 
 ### load data
-(loaded <-  load(file.path(in_dir, "data_for_vcp_EVES2.RData")))
-t0 <- openxlsx::read.xlsx(file.path(in_dir, "template4tables_EVES2.xlsx"), sheet='core')
+(loaded <-  load(file.path(in_dir, "data_for_vcp.RData")))
 
 ### constants
 countries <- c("CZ","DE","ES","FR","HU","IT","NL","SE","GB")

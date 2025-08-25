@@ -15,7 +15,7 @@ outdir <- "./output"
 countries <- c("CZ","DE","ES","FR","HU","IT","NL","SE","GB")
 names(countries) <- countries
 
-countries.lab <- countrycode::countrycode(countries, 'iso2c', 'country.name')
+countries.lab <- countrycode(countries, 'iso2c', 'country.name')
 names(countries.lab) <- countries
 countries.lab['GB'] <- 'England'
 countries.lab <- sort(countries.lab)
@@ -31,7 +31,7 @@ Rcpp::sourceCpp("src/misc.cpp")
 Load data and estimates
 
 ``` r
-loaded <-  load(file.path(in_dir, "data_for_vcp_EVES2.RData"))
+loaded <-  load(file.path(in_dir, "data_for_vcp.RData"))
 est <- readRDS(file.path(outdir, "estimates_w_intercepts_r.rds"))
 ```
 

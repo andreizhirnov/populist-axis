@@ -7,18 +7,22 @@ set.seed(123)
 
 rm(list=ls())
 
+## define subdirectories
 in_dir <- "./data"
+aux_dir <- "./misc_inputs"
 out_dir <- "./output"
 
+## set constants
 countries <- c("CZ","DE","ES","FR","HU","IT","NL","SE","GB")
 names(countries) <- countries
 
-(loaded <- load(file.path(in_dir, "prepared_for_vcp_EVES2.RData")))
- 
-pol.mod <- openxlsx::read.xlsx(file.path(in_dir, "variables with policies.xlsx"), sheet="model3")
+## load data
+(loaded <- load(file.path(in_dir, "prepared_for_vcp.RData")))
+
+## define models
+pol.mod <- openxlsx::read.xlsx(file.path(aux_dir, "manifest_variables.xlsx"))
 udims <- c('econ','cult','populism')
 dims <- unique(pol.mod$dim)
-
 target <- pol.mod[['vabbr']]
 
 models <- list()
@@ -44,19 +48,17 @@ ppl =~ P1 + P2 + P3;
 man =~ M1 + M2 + M3;
 "
 
+## define labs
 dims.lab <- c(econ="Economic", cult="Cultural",
               ant="Anti-elitism", ppl="People-centrism", man="Manichean", populism="Populism")
-countries.lab <- countrycode::countrycode(countries, 'iso2c', 'country.name')
-names(countries.lab) <- countries
-countries.lab['GB'] <- 'England'
-countries.lab <- sort(countries.lab)
 
-## add party data with negligible weight
+## add party data to the user data with negligible weight
 psams <- pbulk[,c('cntry','row',target)]
 psams$wt <- 0.001
 psams$type <- 'P'
 psams <- split(psams, psams$cntry)
 
+## extract replicate samples from the imputed dataset
 nimp <- vbulk.i[[1L]]$m 
 sams <- lapply(countries, function(cn) {
   lapply(seq_len(nimp), function(it) { 
@@ -66,7 +68,7 @@ sams <- lapply(countries, function(cn) {
   })
 })
 
-### estimate
+## estimate models
 est <- lapply(countries, function(cn) {
   lapply(sams[[cn]], function(u) {
     cfa(models[[cn]], data=u, sampling.weights='wt', parameterization='delta')
@@ -82,9 +84,14 @@ lapply(first_models, fitMeasures, fit.measures = c("cfi","rmsea","srmr")) |>
   bind_rows(.id="cntry") |>
   write.csv(file=file.path(out_dir,paste0("mfit_bycountry.csv")), na='')
 
-# type_s = c('Standardized Loadings'=1,"Latent Variable Correlations"=2,'Thresholds'=3, 'Residual Variances'=4)[type],
 
 ## export standardized solutions
+## types: 
+## 'SL': Standardized loadings
+## 'LVC': Latent variable correlations
+## 'TR': Thresholds
+## 'RV': Residual variances
+
 sols <- lapply(first_models, standardizedSolution) |>
   bind_rows(.id="cntry") |> 
   filter(se>0) |>
@@ -122,14 +129,10 @@ print(xtable::xtable(sols[c("lab", countries)], type = "latex"),
 
 # write.csv(sols, file=file.path(out_dir,paste0("mestimates_bycountry.csv")), row.names=FALSE, na='')
 
-# generate predicted scores
+# generate scores
 pred <- lapply(countries, function(cn) {
   lapply(est[[cn]], lavPredict, type = "lv")
 })
-saveRDS(pred, file.path(out_dir, "meas_pred.rds"))
-
-pred <- readRDS(file.path(out_dir, "meas_pred.rds"))
-# lapply(pred, function(u) summary(u[[1L]]))
 
 scored <- lapply(countries, function(cn) {
 # aggregate over imputations
@@ -182,12 +185,12 @@ covs <- lapply(countries, function(cn) {
                  method = c("unbiased", "ML"))$cor 
 })
  
-## make scaling matrices
+## make scaling matrices to produce uncorrelated coordinates later on
 sca.simple <- lapply(countries, function(cn) {  
   solve(t(chol(covs[[cn]][udims,udims])))
 })
 
-save(list=c("vdata", "pdata", "sca.simple", "sq"), file= file.path(in_dir, "data_for_vcp_EVES2.RData"))
+save(list=c("vdata", "pdata", "sca.simple"), file= file.path(in_dir, "data_for_vcp_EVES2.RData"))
 
 
 
