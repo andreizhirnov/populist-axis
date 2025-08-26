@@ -1,7 +1,7 @@
 Populist Axis - Landscapes
 ================
 AZ
-2025-08-25
+2025-08-26
 
 ### Load the necessary packages and set options
 
@@ -128,8 +128,9 @@ rbind(long_cors, long_pcors) |>
   theme(legend.position='bottom')
 ```
 
-![](3_landscapes_files/figure-gfm/unnamed-chunk-7-1.png)<!-- --> \###
-Landscapes
+![](3_landscapes_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+### Landscapes
 
 ``` r
 kde2d.weighted <- function(dat, w, n) {

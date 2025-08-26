@@ -123,6 +123,7 @@ rbind(long_cors, long_pcors) |>
   expand_limits(x=c(-1,1)) +
   theme(legend.position='bottom')
 ```
+
 ### Landscapes
 ```{r, fig.width=14, fig.height=5}
 kde2d.weighted <- function(dat, w, n) {
