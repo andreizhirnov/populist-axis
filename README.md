@@ -1,8 +1,8 @@
 This code can be used to replicate the analysis presented in the paper "Populist Axis: Mapping European Voters and Parties in a Political Space with Populist, Economic and Cultural Dimensions."
 
 The analysis relies on the following data (along with the data in the _misc_inputs_ folder):
-* __PRECEDE3_ww_nolabs.rds__: Cross-national survey by PRECEDE3
-* __PEPS.rds__: Expert survey on party positions by PRECEDE3
+* __PRECEDE3_ww_nolabs.rds__: Cross-national survey by the PRECEDE team
+* __PEPS.rds__: Expert survey on party positions (PEPS)
 * __parlgov.xlsx__: Döring, Holger, Alexandra Quaas, Maike Hesse, and Philip Manow. 2023. Parliaments and governments database (ParlGov): Information on parties, elections and cabinets in established democracies.
 https://www.parlgov.org/data-info/
 * __POPPA_party_means_forR.dta__: Zaslove, Andrej, Maurits Meijers, and Robert Huber. 2024. Populism and Political Parties Expert Survey 2023 (POPPA). https://doi.org/10.7910/DVN/RMQREQ
