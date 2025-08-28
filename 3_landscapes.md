@@ -1,9 +1,41 @@
 Populist Axis - Landscapes
 ================
 AZ
-2025-08-26
+2025-08-28
 
 ### Load the necessary packages and set options
+
+``` r
+library(ggplot2)
+library(ggrepel)
+library(patchwork)
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library(tidyr)
+library(countrycode)
+
+set.seed(123)
+
+theme_set(theme_bw() + theme(axis.title=element_text(size=11, color='black'), 
+                             strip.text=element_text(size=10, color='black'),
+                             axis.text=element_text(size=10, color='black'), 
+                             legend.text=element_text(size=10, color='black'),
+                             title=element_text(size=14, color='black')
+                             ))
+```
 
 ### Set constants
 

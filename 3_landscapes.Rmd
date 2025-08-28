@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Load the necessary packages and set options
 
-```{r prep, include=FALSE} 
+```{r prep} 
 library(ggplot2)
 library(ggrepel)
 library(patchwork)

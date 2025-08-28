@@ -1,9 +1,38 @@
 Populist Axis - Dimensions and Vote
 ================
 AZ
-2025-08-25
+2025-08-28
 
 ### Load the necessary packages and set options
+
+``` r
+library(ggplot2)
+library(Rcpp)
+library(ggrepel)
+library(patchwork)
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library(tidyr)
+library(countrycode)
+
+theme_set(theme_bw() + theme(axis.title=element_text(size=12), strip.text=element_text(size=12),
+                             axis.text=element_text(size=11), legend.text=element_text(size=11)))
+
+set.seed(123) 
+```
 
 ### Preliminary things
 
